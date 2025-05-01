@@ -1,33 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:login_app/widgets/common_bottom_navigation_bar.dart';
-import 'package:login_app/widgets/custom_button.dart';
 import 'package:login_app/widgets/custom_drawer.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-
-  int _selectedIndex = 0;
-
+class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("홈"),
+        title: Text("검색"),
       ),
       body: Center(
         child: 
-          const Text("홈 화면"),
+          const Text("검색 화면"),
       ),
       endDrawer: CustomDrawer(),
       bottomNavigationBar: CommonBottomNavigationBar(
-        currentIndex: 0
+        currentIndex: 1
       )
-    );
+    );;
   }
 }
