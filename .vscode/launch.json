@@ -4,7 +4,13 @@
     // 자세한 내용을 보려면 https://go.microsoft.com/fwlink/?linkid=830387을(를) 방문하세요.
     "version": "0.2.0",
     "configurations": [
-        
+        {
+            "type": "java",
+            "name": "LoginApplication",
+            "request": "launch",
+            "mainClass": "com.aloha.login.LoginApplication",
+            "projectName": "login"
+        },
         {
             "name": "login_app",
             "cwd": "login_app",

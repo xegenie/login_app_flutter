@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:login_app/notifications/snackbar.dart';
+import 'package:login_app/provider/user_provider.dart';
 import 'package:login_app/widgets/custom_button.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +24,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Provider 선언
+    // listen
+    // - true : 변경사항을 수신 대기⭕ (구독)
+    // - false : 변경사항을 수신 대기❌ (구독 안함)
+    UserProvider userProvider =
+        Provider.of<UserProvider>(context, listen: false);
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -39,8 +50,6 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: EdgeInsets.only(
             left: 16,
             right: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-            top: 20,
           ),
           child: Form(
             key: _formKey,
@@ -128,12 +137,43 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 10),
                 CustomButton(
                   text: "로그인",
-                  onPressed: () {},
+                  onPressed: () async {
+                    // 유효성 검사
+                    if (!_formKey.currentState!.validate()) {
+                      return;
+                    }
+
+                    final username = _usernameController.text;
+                    final password = _passwordController.text;
+
+                    // 로그인 요청
+                    await userProvider.login(username, password);
+
+                    if (userProvider.isLogin) {
+                      print('로그인 성공');
+
+                      Snackbar(
+                              text: '로그인에 성공하였습니다.',
+                              icon: Icons.check_circle,
+                              backgroundColor: Colors.green)
+                          .showSnackbar(context);
+
+                      Navigator.pop(context);
+                    } else {
+                      print('로그인 실패');
+
+                      Snackbar(
+                              text: '로그인에 실패하였습니다.',
+                              icon: Icons.check_circle,
+                              backgroundColor: Colors.red)
+                          .showSnackbar(context);
+                    }
+                  },
                 ),
                 const SizedBox(height: 10),
                 CustomButton(
                   text: "구글 로그인",
-                  onPressed: () {},
+                  onPressed: () { },
                 ),
                 const SizedBox(height: 10),
                 CustomButton(
@@ -149,10 +189,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TextButton(
-                        onPressed: () {}, child: const Text('아이디 찾기')),
-                    TextButton(
-                        onPressed: () {}, child: const Text('비밀번호 찾기')),
+                    TextButton(onPressed: () {}, child: const Text('아이디 찾기')),
+                    TextButton(onPressed: () {}, child: const Text('비밀번호 찾기')),
                   ],
                 ),
                 const SizedBox(height: 16),

@@ -1,0 +1,91 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:login_app/models/user.dart';
+
+class UserProvider extends ChangeNotifier {
+  
+  // 상태관리 정보
+  // 사용자 정보
+  late User _userInfo;
+  // 로그인 상태
+  bool _loginStat = false;
+  // getter
+  User get userInfo => _userInfo;
+  bool get isLogin => _loginStat;
+  // setter
+  set userInfo(User userInfo) {
+    _userInfo = userInfo;
+  }
+  set loginStat(bool loginStat) {
+    _loginStat = loginStat;
+  }
+
+  // HTTP 요청 객체
+  final Dio _dio = Dio();
+  // 안전한 저장소
+  final storage = const FlutterSecureStorage();
+
+  // 로그인 요청
+  Future<void> login(String username, String password) async {
+
+    // 초기화
+    _loginStat = false;
+
+    const url = 'http://10.0.2.2:8080/login';
+    final data = {
+      'username': username,
+      'password': password,
+    };
+    try {
+      final response = await _dio.post(url, data: data);
+      if (response.statusCode == 200) {
+
+        print("로그인 성공");
+
+        // JWT ➡️ SecureStorage 에 저장
+        final authorization = response.headers['authorization']?.first;
+
+        if (authorization == null) {
+          print("아이디 또는 비밀번호가 일치하지 않습니다.");
+          return;
+        }
+        
+        final jwt = authorization.replaceFirst('Bearer ', '');
+        print("JWT : $jwt");
+        await storage.write(key: 'jwt', value: jwt);
+
+        // 사용자 정보, 로그인 상태 ➡️ Provider 에 갱신
+        _userInfo = User.fromMap(response.data);
+        _loginStat = true;
+      }
+      else if( response.statusCode == 403 ) {
+        print("아이디 또는 비밀번호가 일치하지 않습니다.");
+      }
+      else {
+        print("네트워크 오류 또는 알 수 없는 오류로 로그인에 실패하였습니다.");
+      }
+    } catch (e) {
+      print("로그인 처리 중 에러 발생 : $e");
+      return;
+    }
+    // 업데이트 된 상태를 구독하고 있는 위젯에 다시 빌드
+    notifyListeners();
+  }
+
+  // 로그아웃
+  Future<void> logout() async {
+    try {
+      // JWT 토큰 삭제
+      await storage.delete(key: 'jwt');
+      // 사용자 정보 초기화
+      _userInfo = User();
+      // 로그인 상태 초기화
+      _loginStat = false;
+      print('로그아웃 성공');
+    } catch (e) {
+      print('로그아웃 실패 : $e');
+    }
+    notifyListeners();
+  }
+}

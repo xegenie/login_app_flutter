@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:login_app/notifications/snackbar.dart';
+import 'package:login_app/provider/user_provider.dart';
+import 'package:login_app/screens/home_screen.dart';
 import 'package:login_app/widgets/common_bottom_navigation_bar.dart';
 import 'package:login_app/widgets/custom_button.dart';
 import 'package:login_app/widgets/custom_drawer.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,7 +15,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-
   final _formKey = GlobalKey<FormState>();
 
   String? _username;
@@ -24,6 +27,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    UserProvider userProvider =
+        Provider.of<UserProvider>(context, listen: true);
+
+    // 로그인 상태 확인
+    if (!userProvider.isLogin) {
+      // 리다이렉트
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // 남아있는 스택이 있는지 확인
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+        Navigator.pushNamed(context, "/auth/login");
+        Snackbar(
+                text: '로그인이 필요합니다.',
+                backgroundColor: Colors.red,
+                icon: Icons.error)
+            .showSnackbar(context);
+      });
+
+      return const HomeScreen();
+    }
+
     return Scaffold(
         appBar: AppBar(
           title: Text("마이"),
