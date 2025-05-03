@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:login_app/provider/user_provider.dart';
 import 'package:login_app/screens/auth/join_screen.dart';
@@ -10,11 +12,15 @@ import 'package:login_app/screens/user/search_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(
-  // Provider
-  // - ChagneNotifierProvider 를 사용하여 전역으로 사용할 수 있도록 지정
-    ChangeNotifierProvider(
+      // Provider
+      // - ChagneNotifierProvider 를 사용하여 전역으로 사용할 수 있도록 지정
+      ChangeNotifierProvider(
     create: (context) => UserProvider(),
     child: const MyApp(),
   ));

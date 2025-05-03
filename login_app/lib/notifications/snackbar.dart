@@ -19,7 +19,7 @@ class Snackbar {
   void showSnackbar(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
+        content: Wrap(
           children: [
             Icon(icon, color: color,),
             SizedBox(width: 8,),
