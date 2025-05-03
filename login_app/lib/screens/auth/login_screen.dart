@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.pop(context);
                       } catch (e) {
                         Snackbar(
-                          text: '구글 로그인 실패: $e',
+                          text: '구글 로그인 실패',
                           icon: Icons.error,
                           backgroundColor: Colors.red,
                         ).showSnackbar(context);
