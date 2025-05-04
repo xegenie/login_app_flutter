@@ -23,4 +23,6 @@ public interface UserMapper {
     // 회원 삭제
     public int delete(String username) throws Exception;
 
+    // 이메일 조회
+    public Users selectByEmail(String email) throws Exception;
 }

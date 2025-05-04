@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class UserServiceImpl implements UserService {
-    
+
     @Autowired
     private UserMapper userMapper;
 
@@ -34,11 +34,11 @@ public class UserServiceImpl implements UserService {
         int result = userMapper.join(user);
 
         // 권한 등록
-        if( result > 0 ) {
+        if (result > 0) {
             UserAuth userAuth = UserAuth.builder()
-                                        .username(user.getUsername())
-                                        .auth("ROLE_USER")
-                                        .build();
+                    .username(user.getUsername())
+                    .auth("ROLE_USER")
+                    .build();
             result += userMapper.insertAuth(userAuth);
         }
         return result > 0;
@@ -71,6 +71,33 @@ public class UserServiceImpl implements UserService {
         return userMapper.delete(username) > 0;
     }
 
+    @Override
+    public Users saveOrLoginGoogleUser(String email, String name) throws Exception {
+        System.out.println("이메일 : " + email);
+        // 구글 이메일로 사용자 조회
+        Users existingUser = userMapper.selectByEmail(email);
 
-    
+        // 사용자가 없으면 새로운 사용자로 등록
+        if (existingUser == null) {
+            Users newUser = Users.builder()
+                    .username(email) // 이메일을 아이디로 사용
+                    .email(email)
+                    .name(name)
+                    .provider("google")
+                    .build();
+
+            // 비밀번호는 구글 로그인에서는 필요 없으므로 null 처리
+            userMapper.join(newUser);
+
+            // 권한도 등록
+            userMapper.insertAuth(UserAuth.builder()
+                    .username(newUser.getUsername())
+                    .auth("ROLE_USER")
+                    .build());
+
+            return newUser;
+        }
+        // 이미 사용자가 존재하면 그 사용자 반환
+        return existingUser;
+    }
 }

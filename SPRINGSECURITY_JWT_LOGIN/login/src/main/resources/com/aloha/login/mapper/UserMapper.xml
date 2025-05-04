@@ -53,8 +53,8 @@
 
     <!-- 회원 가입 -->
     <insert id="join">
-        INSERT INTO users ( id, username, password, name, email )
-        VALUES ( #{id}, #{username}, #{password}, #{name}, #{email} )
+        INSERT INTO users ( id, username, password, name, email, provider )
+        VALUES ( #{id}, #{username}, #{password}, #{name}, #{email}, #{provider} )
     </insert>
 
     <!-- 회원 정보 수정 -->
@@ -81,4 +81,18 @@
          WHERE username = #{username}
     </delete>
 
+    <!-- 이메일 조회 -->
+    <select id="selectByEmail" resultType="Users">
+        SELECT
+            id,
+            email,
+            username,
+            password,
+            created_at,
+            updated_at
+        FROM
+            users
+        WHERE
+            email = #{email}
+    </select>
 </mapper>

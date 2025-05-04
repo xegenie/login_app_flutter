@@ -1,6 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:login_app/notifications/snackbar.dart';
 import 'package:login_app/provider/user_provider.dart';
 import 'package:login_app/widgets/custom_button.dart';
@@ -22,25 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-
-  // 구글로그인
-  Future<UserCredential> signInWithGoogle() async {
-    // Trigger the authentication flow
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-    // Obtain the auth details from the request
-    final GoogleSignInAuthentication? googleAuth =
-        await googleUser?.authentication;
-
-    // Create a new credential
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
-      idToken: googleAuth?.idToken,
-    );
-
-    // Once signed in, return the UserCredential
-    return await FirebaseAuth.instance.signInWithCredential(credential);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -222,16 +206,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                CustomButton(
-                  text: "네이버 로그인",
-                  onPressed: () {},
-                ),
-                const SizedBox(height: 10),
-                CustomButton(
-                  text: "카카오톡 로그인",
-                  onPressed: () {},
-                ),
-                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -253,5 +227,65 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  // 구글 로그인
+  Future<void> signInWithGoogle() async {
+    try {
+      // 1. 구글 로그인
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser?.authentication;
+
+      // 2. Firebase에 구글 인증 정보로 로그인
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
+      );
+
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final email = userCredential.user?.email;
+      final name = userCredential.user?.displayName ?? 'Unknown';
+
+      // 3. 서버에 로그인 요청 (JWT 토큰 받기)
+      final jwtToken = await _loginWithGoogle(email, name);
+
+      // 4. JWT 토큰 저장 (SharedPreferences 등 사용 가능)
+      print('JWT Token: $jwtToken');
+    } catch (e) {
+      print('Google Sign-In Error: $e');
+      rethrow;
+    }
+  }
+
+  // 서버에 구글 로그인 정보를 전달하여 JWT 토큰 받기
+  Future<String?> _loginWithGoogle(String? email, String? name) async {
+    if (email == null || name == null) return null;
+
+    try {
+      Dio dio = Dio();
+
+      final response = await dio.post(
+        'http://10.0.2.2:8080/google-login',
+        data: jsonEncode({
+          'email': email,
+          'name': name,
+        }),
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data['token'];
+      } else {
+        throw Exception('구글 로그인 서버 요청 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error during Google login request: $e');
+      return null;
+    }
   }
 }

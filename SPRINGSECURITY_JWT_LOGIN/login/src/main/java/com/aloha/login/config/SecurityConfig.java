@@ -3,6 +3,7 @@ package com.aloha.login.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -17,16 +18,22 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.aloha.login.security.filter.JwtAuthenticationFilter;
 import com.aloha.login.security.filter.JwtRequestFilter;
 import com.aloha.login.security.provider.JwtProvider;
+import com.aloha.login.service.CustomOAuth2UserService;
 import com.aloha.login.service.UserDetailServiceImpl;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity( prePostEnabled = true, securedEnabled = true )
+
 public class SecurityConfig {
 
 	@Autowired private UserDetailServiceImpl userDetailServiceImpl;
 
 	@Autowired private JwtProvider jwtProvider;
+
+	@Autowired 
+	@Lazy
+	private CustomOAuth2UserService customOAuth2UserService;
 
 	private AuthenticationManager authenticationManager;
 
@@ -66,6 +73,13 @@ public class SecurityConfig {
 						, UsernamePasswordAuthenticationFilter.class);
 
 
+		 // OAuth2 로그인 설정 추가
+		 http.oauth2Login(oauth2 -> oauth2
+		 .userInfoEndpoint(userInfo -> userInfo
+			 .userService(customOAuth2UserService) // 사용자 정보 서비스 설정
+		 )
+	 );
+
 		// 구성이 완료된 SecurityFilterChain을 반환합니다.
 		return http.build();
 	}
@@ -75,4 +89,5 @@ public class SecurityConfig {
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
+	
 }
