@@ -83,16 +83,8 @@
 
     <!-- 이메일 조회 -->
     <select id="selectByEmail" resultType="Users">
-        SELECT
-            id,
-            email,
-            username,
-            password,
-            created_at,
-            updated_at
-        FROM
-            users
-        WHERE
-            email = #{email}
+        SELECT *
+        FROM users
+        WHERE email = #{email}
     </select>
 </mapper>

@@ -11,6 +11,7 @@ class User {
   DateTime? updatedAt;
   bool? enabled;
   List<Auth>? authList;
+  String? provider;
 
   User(
       {this.no,
@@ -22,7 +23,9 @@ class User {
       this.createdAt,
       this.updatedAt,
       this.enabled,
-      this.authList = const []});
+      this.authList = const [],
+      this.provider,
+      });
 
   // User => Map
   Map<String, dynamic> toMap() {
@@ -36,6 +39,7 @@ class User {
       'createdAt': createdAt,
       'updatedAt': updatedAt,
       'enabled': enabled,
+      'provider': provider,
     };
   }
 
@@ -54,6 +58,7 @@ class User {
       authList: map['authList'] != null
         ? List<Auth>.from(map['authList'].map((auth) => Auth.fromMap(auth)))
         : [],
+      provider: map['provider']
     );
   }
 }
