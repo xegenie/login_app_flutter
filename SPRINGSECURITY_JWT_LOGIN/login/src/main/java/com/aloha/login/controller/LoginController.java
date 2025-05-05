@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.aloha.login.domain.AuthenticationRequest;
 import com.aloha.login.domain.GoogleLoginRequest;
@@ -175,6 +179,40 @@ public class LoginController {
 
         } catch (Exception e) {
             return new ResponseEntity<>("구글 로그인 실패: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // 네이버 로그인
+    @PostMapping("/naver-login")
+    public ResponseEntity<?> naverLogin(@RequestBody Map<String, String> loginData) {
+        try {
+            String id = loginData.get("id");
+            String email = loginData.get("email");
+            String name = loginData.get("name");
+
+            // 네이버로부터 받은 사용자 정보로 JWT 토큰 생성
+            String jwt = createJwtToken(email);
+
+            // 사용자 정보 저장 또는 로그인 처리
+            Users user = userService.saveOrLoginNaverUser(email, name);
+
+            // user 정보를 Map으로 변환하고 JSON 형식으로 변환
+            String userJson = new ObjectMapper().writeValueAsString(user);
+
+            // 응답 본문 구성
+            Map<String, String> responseBody = new HashMap<>();
+            responseBody.put("token", jwt);
+            responseBody.put("user", userJson);
+
+            // 헤더에 JWT 토큰 추가
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
+
+            // 응답 반환
+            return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>("네이버 로그인 실패: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 

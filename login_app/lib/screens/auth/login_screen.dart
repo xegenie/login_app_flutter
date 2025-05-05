@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:login_app/notifications/snackbar.dart';
 import 'package:login_app/provider/user_provider.dart';
 import 'package:login_app/widgets/custom_button.dart';
+import 'package:naver_login_sdk/naver_login_sdk.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -193,10 +194,148 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
                     },
                     child: SizedBox(
-                      width: double.infinity, // 또는 원하는 너비
+                      width: double.infinity,
                       height: 50,
                       child: Image.asset(
                         'assets/images/google_login.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      try {
+                        const clientId = 'uR8aMYGT5QeEesKQ8Eoe';
+                        const clientSecret = 'IBsH1sjga2';
+                        const clientName = "login_app";
+
+                        await NaverLoginSDK.initialize(
+                          clientId: clientId,
+                          clientSecret: clientSecret,
+                          clientName: clientName,
+                        );
+
+                        await NaverLoginSDK.authenticate(
+                          callback: OAuthLoginCallback(
+                            onSuccess: () async {
+                              await NaverLoginSDK.profile(
+                                callback: ProfileCallback(
+                                  onSuccess:
+                                      (resultCode, message, response) async {
+
+                                    final profile = NaverLoginProfile.fromJson(
+                                        response: response);
+                                    final id = profile.id;
+                                    final email = profile.email;
+                                    final name = profile.name;
+
+                                    print("네이버 로그인 성공");
+
+                                    await userProvider.signInWithNaver(
+                                        id!, email!, name!);
+                                    Snackbar(
+                                      text: '네이버 로그인 성공',
+                                      icon: Icons.check_circle,
+                                      backgroundColor: Colors.green,
+                                    ).showSnackbar(context);
+
+                                    Navigator.pop(context);
+                                  },
+                                  onFailure: (httpStatus, message) {
+                                    print("네이버 로그인 실패");
+                                    Snackbar(
+                                      text: '네이버 로그인 실패',
+                                      icon: Icons.error,
+                                      backgroundColor: Colors.red,
+                                    ).showSnackbar(context);
+                                  },
+                                  onError: (errorCode, message) {
+                                    print("네이버 로그인 에러");
+
+                                    if (message == 'naverapp_not_installed') {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: Text('알림'),
+                                          content: Text('네이버 앱이 설치되어 있지 않습니다.'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                              child: Text('확인',
+                                                  style: TextStyle(
+                                                      color:
+                                                          Colors.blueAccent)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    } else {
+                                      Snackbar(
+                                        text: '네이버 로그인 에러',
+                                        icon: Icons.error,
+                                        backgroundColor: Colors.red,
+                                      ).showSnackbar(context);
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                            onFailure: (httpStatus, message) {
+                              print("네이버 로그인 실패");
+                              Snackbar(
+                                text: '네이버 로그인 실패',
+                                icon: Icons.error,
+                                backgroundColor: Colors.red,
+                              ).showSnackbar(context);
+                            },
+                            onError: (errorCode, message) {
+                              print("네이버 로그인 에러");
+
+                              if (message == 'naverapp_not_installed') {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text('알림'),
+                                    content: Text('네이버 앱이 설치되어 있지 않습니다.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text('확인',
+                                            style: TextStyle(
+                                                color: Colors.blueAccent)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                Snackbar(
+                                  text: '네이버 로그인 에러',
+                                  icon: Icons.error,
+                                  backgroundColor: Colors.red,
+                                ).showSnackbar(context);
+                              }
+                            },
+                          ),
+                        );
+                      } catch (e) {
+                        print("네이버 로그인 예외 발생");
+                        Snackbar(
+                          text: '네이버 로그인 예외 발생',
+                          icon: Icons.error,
+                          backgroundColor: Colors.red,
+                        ).showSnackbar(context);
+                      }
+                    },
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: Image.asset(
+                        'assets/images/naver_login.png',
                         fit: BoxFit.contain,
                       ),
                     ),

@@ -17,9 +17,17 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   shared_preferences: ^2.5.1
   provider: ^6.1.2
-  # 소셜 로그인
   http: ^0.13.6
+  # 소셜 로그인
   google_sign_in: ^5.4.1
+
+  flutter_naver_login:
+      git:
+        url: https://github.com/YoonJaePark/flutter_naver_login.git
+        ref: master
+
+  naver_login_sdk: ^2.3.0
+
   # Firebase 의존성
   firebase_auth: ^5.5.3
   firebase_core: ^3.13.0

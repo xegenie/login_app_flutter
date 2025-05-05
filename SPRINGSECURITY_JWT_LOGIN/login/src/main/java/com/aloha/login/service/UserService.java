@@ -23,4 +23,6 @@ public interface UserService {
 
     Users saveOrLoginGoogleUser(String email, String name) throws Exception;
     
+    Users saveOrLoginNaverUser(String email, String name) throws Exception;
+    
 }
