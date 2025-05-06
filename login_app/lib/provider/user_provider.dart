@@ -193,9 +193,29 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signInWithKakao(String id, String name) async {
+  // 카카오 로그인 및 Firebase 로그인
+  Future<void> signInWithFirebase(String idToken, String accessToken) async {
+    try {
+      var provider = OAuthProvider("oidc.login_app");
+      var credential =
+          provider.credential(idToken: idToken, accessToken: accessToken);
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      print("Firebase 로그인 성공!");
+    } catch (e) {
+      print("Firebase 로그인 실패: $e");
+    }
+  }
+
+// 카카오 로그인 후 서버에 사용자 정보 전송
+  Future<void> signInWithKakao(
+      String id, String name, String idToken, String accessToken) async {
     // 초기화
     _loginStat = false;
+
+    // Firebase 로그인
+    await signInWithFirebase(idToken, accessToken); // Firebase 로그인만 처리
 
     const url = 'http://10.0.2.2:8080/kakao-login';
     final data = {
@@ -256,24 +276,24 @@ class UserProvider extends ChangeNotifier {
       if (accessTokenNaver != null && accessTokenNaver.isNotEmpty) {
         await NaverLoginSDK.logout();
         print('네이버 로그아웃 성공');
-      } else {
-        print('네이버 로그인을 하지 않았습니다.');
+      }
+      // 카카오 로그인 상태 확인 후 로그아웃
+      final tokenManager = TokenManagerProvider.instance.manager;
+
+      if (tokenManager.getToken() != null) {
+        try {
+          await UserApi.instance.accessTokenInfo();
+          await UserApi.instance.logout();
+          print('카카오 로그아웃 성공');
+        } catch (e) {}
+      }
+      // Firebase 로그인 상태 확인 후 로그아웃 (구글 포함)
+      if (FirebaseAuth.instance.currentUser != null) {
+        await FirebaseAuth.instance.signOut();
+        print('Firebase 로그아웃 성공');
       }
 
-      // 카카오 로그아웃 처리
-      try {
-        await UserApi.instance.logout();
-        print('카카오 로그아웃 성공');
-      } catch (e) {
-        print('카카오 로그아웃 실패: $e');
-      }
-
-      // 구글 로그아웃 처리
-      await GoogleSignIn().signOut();
-      await FirebaseAuth.instance.signOut();
-      print('구글 로그아웃 성공');
-
-      print('전체 로그아웃 성공');
+      print('모든 로그인 서비스 로그아웃 완료 🎉');
     } catch (e) {
       print('로그아웃 실패: $e');
     }

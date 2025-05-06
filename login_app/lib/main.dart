@@ -9,6 +9,7 @@ import 'package:login_app/screens/mypage/profile_screen.dart';
 import 'package:login_app/screens/user/cart_screen.dart';
 import 'package:login_app/screens/user/product_screen.dart';
 import 'package:login_app/screens/user/search_screen.dart';
+import 'package:naver_login_sdk/naver_login_sdk.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
@@ -20,11 +21,17 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-// runApp() 호출 전 Flutter SDK 초기화
+  // 🔹 로그인 SDK 초기화
+  NaverLoginSDK.initialize(
+    clientId: "uR8aMYGT5QeEesKQ8Eoe",
+    clientSecret: "IBsH1sjga2",
+  );
   KakaoSdk.init(
     nativeAppKey: '44d474a9e84f539aa2e9025bc229c663',
     javaScriptAppKey: 'a20dbb2c90354d0aa902f5e7370ce7cf',
   );
+
+
 
   runApp(
       // Provider

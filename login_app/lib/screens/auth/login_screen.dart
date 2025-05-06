@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
@@ -347,11 +348,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () async {
-                        print('키 해시 : ' + await KakaoSdk.origin);
+                      print('키 해시 : ' + await KakaoSdk.origin);
+
                       try {
                         bool isInstalled = await isKakaoTalkInstalled();
-
                         OAuthToken token;
+
                         if (isInstalled) {
                           token = await UserApi.instance.loginWithKakaoTalk();
                         } else {
@@ -367,7 +369,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         print("카카오 로그인 성공: $id / $email / $name");
 
-                        await userProvider.signInWithKakao(id, name);
+                        // 카카오 로그인 후 Firebase 로그인과 서버 통합 처리
+                        await userProvider.signInWithKakao(id, name,
+                            token.idToken ?? '', token.accessToken ?? '');
 
                         Snackbar(
                           text: '카카오 로그인 성공',

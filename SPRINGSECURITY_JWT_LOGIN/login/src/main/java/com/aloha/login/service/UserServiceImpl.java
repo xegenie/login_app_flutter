@@ -135,7 +135,7 @@ public class UserServiceImpl implements UserService {
     public Users saveOrLoginKakaoUser(String id, String name) throws Exception {
 
         // id로 사용자 조회
-        Users existingUser = userMapper.selectById(id);
+        Users existingUser = userMapper.selectByUsername(name);
 
         // 사용자가 없으면 새로운 사용자로 등록
         if (existingUser == null) {

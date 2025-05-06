@@ -25,6 +25,6 @@ public interface UserMapper {
 
     // 이메일 조회
     public Users selectByEmail(String email) throws Exception;
-    // 아이디 조회회
-    public Users selectById(String id) throws Exception;
+    // 아이디 조회
+    public Users selectByUsername(String username) throws Exception;
 }

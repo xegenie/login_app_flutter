@@ -89,9 +89,9 @@
     </select>
 
     <!-- 아이디 조회 -->
-    <select id="selectById" resultType="Users">
+    <select id="selectByUsername" resultType="Users">
         SELECT *
         FROM users
-        WHERE id = #{id}
+        WHERE username = #{username}
     </select>
 </mapper>
