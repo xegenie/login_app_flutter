@@ -71,11 +71,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextFormField(
                     controller: _usernameController,
                     validator: (value) {},
-                    decoration: const InputDecoration(
-                      labelText: '아이디',
+                    decoration: InputDecoration(
+                      labelText: userProvider.userInfo.username,
                       hintText: '아이디를 입력해 주세요.',
-                      prefixIcon: Icon(Icons.person_outline),
-                      border: OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.person_outline),
+                      border: const OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -90,11 +90,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextFormField(
                     controller: _nameController,
                     validator: (value) {},
-                    decoration: const InputDecoration(
-                      labelText: '이름',
+                    decoration: InputDecoration(
+                      labelText: userProvider.userInfo.name,
                       hintText: '이름을을 입력해 주세요.',
-                      prefixIcon: Icon(Icons.person_outline),
-                      border: OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.person_outline),
+                      border: const OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -109,8 +109,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextFormField(
                     controller: _emailController,
                     validator: (value) {},
-                    decoration: const InputDecoration(
-                      labelText: '이메일',
+                    decoration: InputDecoration(
+                      labelText: userProvider.userInfo.email,
                       hintText: '이메일을 입력해 주세요.',
                       prefixIcon: Icon(Icons.email_outlined),
                       border: OutlineInputBorder(),
