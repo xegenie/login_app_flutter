@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:login_app/notifications/snackbar.dart';
 import 'package:login_app/provider/user_provider.dart';
 import 'package:login_app/widgets/custom_button.dart';
@@ -226,7 +227,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 callback: ProfileCallback(
                                   onSuccess:
                                       (resultCode, message, response) async {
-
                                     final profile = NaverLoginProfile.fromJson(
                                         response: response);
                                     final id = profile.id;
@@ -336,6 +336,60 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 50,
                       child: Image.asset(
                         'assets/images/naver_login.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // 카카오 로그인 버튼
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                        print('키 해시 : ' + await KakaoSdk.origin);
+                      try {
+                        bool isInstalled = await isKakaoTalkInstalled();
+
+                        OAuthToken token;
+                        if (isInstalled) {
+                          token = await UserApi.instance.loginWithKakaoTalk();
+                        } else {
+                          token =
+                              await UserApi.instance.loginWithKakaoAccount();
+                        }
+
+                        final user = await UserApi.instance.me();
+                        final id = user.id.toString();
+                        final email = user.kakaoAccount?.email ?? 'no-email';
+                        final name =
+                            user.kakaoAccount?.profile?.nickname ?? 'no-name';
+
+                        print("카카오 로그인 성공: $id / $email / $name");
+
+                        await userProvider.signInWithKakao(id, name);
+
+                        Snackbar(
+                          text: '카카오 로그인 성공',
+                          icon: Icons.check_circle,
+                          backgroundColor: Colors.green,
+                        ).showSnackbar(context);
+
+                        Navigator.pop(context);
+                      } catch (e) {
+                        print("카카오 로그인 실패: $e");
+                        Snackbar(
+                          text: '카카오 로그인 실패',
+                          icon: Icons.error,
+                          backgroundColor: Colors.red,
+                        ).showSnackbar(context);
+                      }
+                    },
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: Image.asset(
+                        'assets/images/kakao_login.png',
                         fit: BoxFit.contain,
                       ),
                     ),

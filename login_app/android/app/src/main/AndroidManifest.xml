@@ -3,6 +3,7 @@
         android:label="login_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
         <!-- 네이버 로그인 추가 -->
         <meta-data
             android:name="com.naver.sdk.clientId"
@@ -13,7 +14,22 @@
          <meta-data
             android:name="com.naver.sdk.clientName"
             android:value="@string/client_name" />
-        <!-- 네이버 로그인 추가 -->
+
+        <!-- 카카오 로그인 추가 -->
+        <activity 
+            android:name="com.kakao.sdk.flutter.AuthCodeCustomTabsActivity"
+            android:exported="true">
+            <intent-filter android:label="flutter_web_auth">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- "kakao${YOUR_NATIVE_APP_KEY}://oauth" 형식의 앱 실행 스킴 설정 -->
+                <!-- 카카오 로그인 Redirect URI -->
+                <data android:scheme="kakao44d474a9e84f539aa2e9025bc229c663" android:host="oauth"/>
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

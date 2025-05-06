@@ -86,7 +86,6 @@ public class UserServiceImpl implements UserService {
                     .provider("google")
                     .build();
 
-            // 비밀번호는 구글 로그인에서는 필요 없으므로 null 처리
             userMapper.join(newUser);
 
             // 권한도 등록
@@ -117,7 +116,35 @@ public class UserServiceImpl implements UserService {
                     .provider("naver")
                     .build();
 
-            // 비밀번호는 네이버 로그인에서는 필요 없으므로 null 처리
+            userMapper.join(newUser);
+
+            // 권한도 등록
+            userMapper.insertAuth(UserAuth.builder()
+                    .username(newUser.getUsername())
+                    .auth("ROLE_USER")
+                    .build());
+
+            return newUser;
+        }
+
+        // 이미 사용자가 존재하면 그 사용자 반환
+        return existingUser;
+    }
+
+    @Override
+    public Users saveOrLoginKakaoUser(String id, String name) throws Exception {
+
+        // id로 사용자 조회
+        Users existingUser = userMapper.selectById(id);
+
+        // 사용자가 없으면 새로운 사용자로 등록
+        if (existingUser == null) {
+            Users newUser = Users.builder()
+                    .username(name)
+                    .name(name)
+                    .provider("kakao")
+                    .build();
+
             userMapper.join(newUser);
 
             // 권한도 등록

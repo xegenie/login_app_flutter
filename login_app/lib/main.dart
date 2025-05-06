@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 import 'package:flutter/material.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:login_app/provider/user_provider.dart';
 import 'package:login_app/screens/auth/join_screen.dart';
 import 'package:login_app/screens/auth/login_screen.dart';
@@ -11,10 +11,19 @@ import 'package:login_app/screens/user/product_screen.dart';
 import 'package:login_app/screens/user/search_screen.dart';
 import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+// runApp() 호출 전 Flutter SDK 초기화
+  KakaoSdk.init(
+    nativeAppKey: '44d474a9e84f539aa2e9025bc229c663',
+    javaScriptAppKey: 'a20dbb2c90354d0aa902f5e7370ce7cf',
   );
 
   runApp(

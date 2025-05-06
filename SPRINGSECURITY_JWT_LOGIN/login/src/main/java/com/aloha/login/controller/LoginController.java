@@ -216,4 +216,37 @@ public class LoginController {
         }
     }
 
+    // 네이버 로그인
+    @PostMapping("/kakao-login")
+    public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> loginData) {
+        try {
+            String id = loginData.get("id");
+            String name = loginData.get("name");
+
+            // 네이버로부터 받은 사용자 정보로 JWT 토큰 생성
+            String jwt = createJwtToken(id);
+
+            // 사용자 정보 저장 또는 로그인 처리
+            Users user = userService.saveOrLoginKakaoUser(id, name);
+
+            // user 정보를 Map으로 변환하고 JSON 형식으로 변환
+            String userJson = new ObjectMapper().writeValueAsString(user);
+
+            // 응답 본문 구성
+            Map<String, String> responseBody = new HashMap<>();
+            responseBody.put("token", jwt);
+            responseBody.put("user", userJson);
+
+            // 헤더에 JWT 토큰 추가
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
+
+            // 응답 반환
+            return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>("카카오 로그인 실패: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }
