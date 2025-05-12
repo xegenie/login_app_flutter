@@ -10,4 +10,5 @@ import lombok.ToString;
 public class GoogleLoginRequest {
     private String email;
     private String name;
+    private String phone;
 }

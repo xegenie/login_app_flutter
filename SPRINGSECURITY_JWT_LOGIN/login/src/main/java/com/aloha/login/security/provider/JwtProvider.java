@@ -47,6 +47,7 @@ public class JwtProvider {
 
     /**
      * 👩‍💼 ➡ 💍 토큰 생성
+     * 
      * @param id
      * @param username
      * @param roles
@@ -59,15 +60,15 @@ public class JwtProvider {
         int exp = 1000 * 60 * 60 * 24 * 5;
         // JWT 토큰 생성
         String jwt = Jwts.builder()
-                            .signWith(shaKey, Jwts.SIG.HS512)            // 시그니처 비밀키, 알고리즘 설정
-                            .header()
-                                .add("typ", SecurityConstants.TOKEN_TYPE) // typ: jwt
-                            .and()
-                            .expiration( new Date( System.currentTimeMillis() + exp ) ) // 토큰만료시간설정 (5일)
-                            .claim("id", id)                        // id       : 사용자 식별키
-                            .claim("username", username)            // username : 사용자 아이디
-                            .claim("rol", roles)                    // rol      : 회원 권한 목록
-                            .compact();
+                .signWith(shaKey, Jwts.SIG.HS512) // 시그니처 비밀키, 알고리즘 설정
+                .header()
+                .add("typ", SecurityConstants.TOKEN_TYPE) // typ: jwt
+                .and()
+                .expiration(new Date(System.currentTimeMillis() + exp)) // 토큰만료시간설정 (5일)
+                .claim("id", id) // id : 사용자 식별키
+                .claim("username", username) // username : 사용자 아이디
+                .claim("rol", roles) // rol : 회원 권한 목록
+                .compact();
 
         log.info("jwt : " + jwt);
         return jwt;
@@ -75,11 +76,12 @@ public class JwtProvider {
 
     /**
      * 💍 ➡ 🔐🍩 토큰 해석
+     * 
      * @param authorization
      * @return
      */
     public UsernamePasswordAuthenticationToken getAuthenticationToken(String authorization) {
-        if( authorization == null || authorization.length() == 0 )
+        if (authorization == null || authorization.length() == 0)
             return null;
 
         // Authorizaion : "Bearer {jwt}"
@@ -92,13 +94,17 @@ public class JwtProvider {
 
             // 💍 ➡ 👩‍💼 JWT 파싱
             Jws<Claims> parsedToken = Jwts.parser()
-                                            .verifyWith(shaKey)
-                                            .build()
-                                            .parseSignedClaims(jwt);
+                    .verifyWith(shaKey)
+                    .build()
+                    .parseSignedClaims(jwt);
             log.info("parsedToken : " + parsedToken);
 
+            // JWT에서 페이로드 가져오기
+            Claims claims = parsedToken.getPayload();
+            log.info("Parsed Claims: " + claims);
+
             // 사용자 식별키(id)
-            String id = parsedToken.getPayload().get("uid").toString();
+            String id = parsedToken.getPayload().get("id").toString();
             // 사용자 아이디
             String username = parsedToken.getPayload().get("username").toString();
             // 회원 권한
@@ -108,28 +114,26 @@ public class JwtProvider {
             user.setId(id);
             user.setUsername(username);
             List<UserAuth> authList = ((List<?>) roles)
-                                        .stream()
-                                        .map( auth -> UserAuth.builder()
-                                                            .username(username)
-                                                            .auth(auth.toString())
-                                                            .build()  
-                                            ) 
-                                        .collect( Collectors.toList() )
-                                        ;
+                    .stream()
+                    .map(auth -> UserAuth.builder()
+                            .username(username)
+                            .auth(auth.toString())
+                            .build())
+                    .collect(Collectors.toList());
             user.setAuthList(authList);
 
             // 시큐리티 권한 목록
-            List<SimpleGrantedAuthority> authorities 
-                    = ((List<?>) roles)
-                        .stream()
-                        .map( auth -> new SimpleGrantedAuthority(auth.toString()) ) 
-                        .collect( Collectors.toList() );
-            
+            List<SimpleGrantedAuthority> authorities = ((List<?>) roles)
+                    .stream()
+                    .map(auth -> new SimpleGrantedAuthority(auth.toString()))
+                    .collect(Collectors.toList());
+
             // 추가 유저정보 가져오기
             try {
                 Users userInfo = userMapper.select(username);
-                if( userInfo != null ) {
+                if (userInfo != null) {
                     user.setName(userInfo.getName());
+                    user.setPhone(userInfo.getPhone());
                     user.setEmail(userInfo.getEmail());
                 }
             } catch (Exception e) {
@@ -153,11 +157,12 @@ public class JwtProvider {
         }
 
         return null;
-        
+
     }
 
     /**
      * 💍❓ 토큰 검증
+     * 
      * @param jwt
      * @return
      */
@@ -165,16 +170,16 @@ public class JwtProvider {
         try {
             // 💍 ➡ 👩‍💼 토큰 파싱
             Jws<Claims> claims = Jwts.parser()
-                                    .verifyWith(getShaKey())
-                                    .build()
-                                    .parseSignedClaims(jwt);
+                    .verifyWith(getShaKey())
+                    .build()
+                    .parseSignedClaims(jwt);
             // 만료기한 추출
             Date expiration = claims.getPayload().getExpiration();
             log.info("만료기간 : " + expiration.toString());
 
             // 날짜A.after( 날짜B )
             // : 날짜A가 날짜B 보다 더 뒤에 있으면 true
-            boolean result = expiration.after( new Date() );
+            boolean result = expiration.after(new Date());
             return result;
         } catch (ExpiredJwtException e) {
             log.error("토큰 만료");
@@ -187,10 +192,10 @@ public class JwtProvider {
         }
         return false;
     }
-    
 
     /**
      * "secret-key" ➡ byte[] ➡ SecretKey
+     * 
      * @return
      */
     public SecretKey getShaKey() {

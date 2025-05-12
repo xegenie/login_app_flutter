@@ -25,10 +25,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         String email = (String) attributes.get("email");
         String name = (String) attributes.get("name");
+        String phone = (String) attributes.get("phone");
 
         // 사용자 저장 또는 업데이트
         try {
-            Users user = userService.saveOrLoginGoogleUser(email, name);
+            Users user = userService.saveOrLoginGoogleUser(email, name, phone);
         } catch (Exception e) {
             System.err.println("구글 사용자 정보 업데이트 실패");
             e.printStackTrace();

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -96,17 +97,18 @@ class UserProvider extends ChangeNotifier {
   }
 
   // 구글 로그인
-  Future<void> signInWithGoogle() async {
-    // 초기화
+  Future<bool> signInWithGoogle() async {
     _loginStat = false;
 
     try {
       // 1. 구글 로그인
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser?.authentication;
+      if (googleUser == null) return false; // 로그인 취소 시 false 반환
 
-      // 2. Firebase에 구글 인증 정보로 로그인
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser.authentication;
+
+      // 2. Firebase 로그인
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth?.accessToken,
         idToken: googleAuth?.idToken,
@@ -115,71 +117,81 @@ class UserProvider extends ChangeNotifier {
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
 
+      // final user = userCredential.user;
+      // final userDocRef =
+      //     FirebaseFirestore.instance.collection('users').doc(user?.uid);
+
+      // // Firestore에 phoneNumber만 업데이트 (기존 데이터 유지)
+      // await userDocRef.set({
+      //   'phoneNumber': user?.phoneNumber ?? '',
+      // }, SetOptions(merge: true)); // ✅ 기존 데이터 유지하면서 업데이트
+
+      // // Firestore에서 업데이트된 phoneNumber 가져오기
+      // final updatedUserDoc = await userDocRef.get();
+      // final phone = updatedUserDoc.data()?['phoneNumber'] as String?;
+
+      // print("📞 휴대폰 번호: $phone");
+
       final email = userCredential.user?.email;
       final name = userCredential.user?.displayName;
+      final phone = userCredential.user?.phoneNumber;
 
       const url = 'http://54.180.59.31/google-login';
-      final data = {
-        'email': email,
-        'name': name,
-      };
+      final data = {'email': email, 'name': name, 'phone': phone};
 
       final response = await _dio.post(url, data: data);
 
       if (response.statusCode == 200) {
         print("로그인 성공");
 
-        // 'Authorization' 헤더에서 JWT 추출
+        // JWT 처리
         final authorization = response.headers['authorization']?.first;
-
         if (authorization == null) {
           print("로그인 정보가 일치하지 않습니다.");
-          return;
+          return false;
         }
 
         final jwt = authorization.replaceFirst('Bearer ', '');
-        print("JWT : $jwt");
         await storage.write(key: 'jwt', value: jwt);
 
         if (response.data == null) {
           print("응답 데이터가 비어 있습니다.");
-          return;
+          return false;
         }
 
         // 서버 응답에서 사용자 정보 처리
         final Map<String, dynamic> userMap = jsonDecode(response.data['user']);
-        _userInfo = app_user.User.fromMap(userMap); // 사용자 정보 갱신
+        _userInfo = app_user.User.fromMap(userMap);
         _loginStat = true;
 
-        // SharedPreferences에 JWT 저장
-        print('자동 로그인');
+        // 자동 로그인 설정
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('auto_login', true);
 
+        return true; // 로그인 성공 시 true 반환
       } else if (response.statusCode == 403) {
         print("아이디 또는 비밀번호가 일치하지 않습니다.");
+        return false;
       } else {
         print("네트워크 오류 또는 알 수 없는 오류로 로그인에 실패하였습니다.");
+        return false;
       }
     } catch (e) {
-      print("로그인 처리 중 에러 발생 : $e");
-      return;
+      print("로그인 처리 중 에러 발생: $e");
+      return false; // 예외 발생 시 false 반환
+    } finally {
+      notifyListeners();
     }
-    // 업데이트 된 상태를 구독하고 있는 위젯에 다시 빌드
-    notifyListeners();
   }
 
   // 네이버 로그인
-  Future<void> signInWithNaver(String id, String email, String name) async {
+  Future<void> signInWithNaver(
+      String id, String email, String name, String phone) async {
     // 초기화
     _loginStat = false;
 
     const url = 'http://54.180.59.31/naver-login';
-    final data = {
-      'id': id,
-      'email': email,
-      'name': name,
-    };
+    final data = {'id': id, 'email': email, 'name': name, 'phone': phone};
 
     try {
       final response = await _dio.post(url, data: data);
@@ -207,11 +219,10 @@ class UserProvider extends ChangeNotifier {
         _userInfo = app_user.User.fromMap(userMap);
         _loginStat = true;
 
-         // SharedPreferences에 JWT 저장
+        // SharedPreferences에 JWT 저장
         print('자동 로그인');
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('auto_login', true);
-
       } else if (response.statusCode == 403) {
         print("네이버 로그인 인증 실패");
       } else {
@@ -281,11 +292,10 @@ class UserProvider extends ChangeNotifier {
         _userInfo = app_user.User.fromMap(userMap);
         _loginStat = true;
 
-         // SharedPreferences에 JWT 저장
+        // SharedPreferences에 JWT 저장
         print('자동 로그인');
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('auto_login', true);
-        
       } else if (response.statusCode == 403) {
         print("카카오 로그인 인증 실패");
       } else {

@@ -22,6 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _nameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
+  TextEditingController _phoneController = TextEditingController();
 
   User? _user;
   UserService userService = UserService();
@@ -64,6 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _usernameController.text = _user?.username ?? _username;
         _nameController.text = _user?.name ?? '';
         _emailController.text = _user?.email ?? '';
+        _phoneController.text = (_user?.phone == 0 ? '' : _user?.phone) ?? '';
       });
     }
 
@@ -123,6 +125,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(
                     height: 16,
+                  ),
+                  // 연락처
+                  TextFormField(
+                    controller: _phoneController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                      return '연락처를 입력해 주세요.';
+                      }
+                      if (!RegExp(r'^\d+$').hasMatch(value)) {
+                      return '숫자만 입력 가능합니다.';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '연락처',
+                      hintText: '연락처를 입력해 주세요.',
+                      prefixIcon: Icon(Icons.phone_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _user?.phone = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20,
                   ),
                   // 이메일
                   TextFormField(
@@ -198,6 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 bool result = await userService.updateUser({
                   'username': _username,
                   'name': _user!.name,
+                  'phone': _user!.phone,
                   'email': _user!.email
                 });
                 if (result) {
@@ -211,6 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   userProvider.userInfo = User(
                       username: _username,
                       name: _user!.name,
+                      phone: _user!.phone,
                       email: _user!.email);
                 }
               }

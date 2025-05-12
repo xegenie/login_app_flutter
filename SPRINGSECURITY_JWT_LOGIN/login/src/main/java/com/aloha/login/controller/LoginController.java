@@ -64,16 +64,19 @@ public class LoginController {
      * 
      * @param authReq
      * @return
+     * @throws Exception 
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthenticationRequest authReq) {
+    public ResponseEntity<?> login(@RequestBody AuthenticationRequest authReq) throws Exception {
         // 아이디 비밀번호
         String username = authReq.getUsername();
         String password = authReq.getPassword();
         log.info("username : " + username);
         log.info("password : " + password);
 
-        String jwt = createJwtToken(username);
+        Users user = userService.select(username);
+
+        String jwt = createJwtToken(username, user.getId());
 
         return new ResponseEntity<>(jwt, HttpStatus.OK);
 
@@ -86,7 +89,7 @@ public class LoginController {
      * @param user
      * @return
      */
-    private String createJwtToken(String username) {
+    private String createJwtToken(String username, String id) {
 
         // 사용자 권한 정보 세팅
         List<String> roles = new ArrayList<String>();
@@ -108,7 +111,7 @@ public class LoginController {
                 .header() // 헤더 설정
                 .add("typ", SecurityConstants.TOKEN_TYPE) // typ : "jwt"
                 .and() // 페이로드 설정
-                .claim("uid", username) // 사용자 아이디
+                .claim("id", id) // 사용자 아이디
                 .claim("username", username) // 사용자 아이디
                 .claim("rol", roles) // 권한 정보
                 .expiration(new Date(System.currentTimeMillis() + day5)) // 만료시간
@@ -142,7 +145,7 @@ public class LoginController {
                 .build()
                 .parseSignedClaims(jwt);
 
-        String username = parsedToken.getPayload().get("uid").toString();
+        String username = parsedToken.getPayload().get("id").toString();
         log.info("username : " + username);
 
         Object roles = parsedToken.getPayload().get("rol");
@@ -159,10 +162,11 @@ public class LoginController {
         try {
             String email = request.getEmail();
             String name = request.getName();
+            String phone = request.getPhone();
 
-            Users user = userService.saveOrLoginGoogleUser(email, name);
+            Users user = userService.saveOrLoginGoogleUser(email, name, phone);
 
-            String jwt = createJwtToken(email);
+            String jwt = createJwtToken(email, user.getId());
 
             // user 정보를 Map으로 변환하고 JSON 형식으로 변환
             String userJson = new ObjectMapper().writeValueAsString(user);
@@ -191,12 +195,13 @@ public class LoginController {
             String id = loginData.get("id");
             String email = loginData.get("email");
             String name = loginData.get("name");
-
-            // 네이버로부터 받은 사용자 정보로 JWT 토큰 생성
-            String jwt = createJwtToken(email);
+            String phone = loginData.get("phone");
 
             // 사용자 정보 저장 또는 로그인 처리
-            Users user = userService.saveOrLoginNaverUser(email, name);
+            Users user = userService.saveOrLoginNaverUser(id, email, name, phone);
+
+            // 네이버로부터 받은 사용자 정보로 JWT 토큰 생성
+            String jwt = createJwtToken(user.getUsername(), user.getId());
 
             // user 정보를 Map으로 변환하고 JSON 형식으로 변환
             String userJson = new ObjectMapper().writeValueAsString(user);
@@ -225,11 +230,11 @@ public class LoginController {
             String id = loginData.get("id");
             String name = loginData.get("name");
 
-            // 네이버로부터 받은 사용자 정보로 JWT 토큰 생성
-            String jwt = createJwtToken(name);
-
             // 사용자 정보 저장 또는 로그인 처리
             Users user = userService.saveOrLoginKakaoUser(id, name);
+
+            // 네이버로부터 받은 사용자 정보로 JWT 토큰 생성
+            String jwt = createJwtToken(user.getUsername(), user.getId());
 
             // user 정보를 Map으로 변환하고 JSON 형식으로 변환
             String userJson = new ObjectMapper().writeValueAsString(user);

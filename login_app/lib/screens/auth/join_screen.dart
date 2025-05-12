@@ -17,6 +17,7 @@ class _JoinScreenState extends State<JoinScreen> {
   String? _password;
   String? _confirmPassword;
   String? _name;
+  String? _phone;
   String? _email;
 
   final userService = UserService();
@@ -142,6 +143,31 @@ class _JoinScreenState extends State<JoinScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
+                // 휴대폰 번호
+                TextFormField(
+                  validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '휴대폰 번호를 입력해 주세요.';
+                  }
+                  if (!RegExp(r'^\d+$').hasMatch(value)) {
+                    return '숫자만 입력 가능합니다.';
+                  }
+                  return null;
+                  },
+                  decoration: const InputDecoration(
+                  labelText: '휴대폰 번호',
+                  hintText: '휴대폰 번호를 입력해 주세요.',
+                  prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  onChanged: (value) {
+                  setState(() {
+                    _phone = value;
+                  });
+                  },
+                ),
+                const SizedBox(height: 16),
                 // 이메일
                 TextFormField(
                   validator: (value) {
@@ -187,6 +213,7 @@ class _JoinScreenState extends State<JoinScreen> {
             'username': _username!,
             'password': _password!,
             'name': _name!,
+            'phone': _phone!,
             'email': _email!,
           });
 

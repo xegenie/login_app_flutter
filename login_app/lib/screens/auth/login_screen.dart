@@ -8,6 +8,8 @@ import 'package:login_app/provider/user_provider.dart';
 import 'package:login_app/widgets/custom_button.dart';
 import 'package:naver_login_sdk/naver_login_sdk.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -169,8 +171,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     final password = _passwordController.text;
 
                     // 로그인 요청
-                    await userProvider.login(username, password, 
-                      rememberId: _rememberId, rememberMe: _rememberMe);
+                    await userProvider.login(username, password,
+                        rememberId: _rememberId, rememberMe: _rememberMe);
 
                     if (userProvider.isLogin) {
                       print('로그인 성공');
@@ -201,16 +203,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: () async {
                       try {
                         await GoogleSignIn().signOut(); // 항상 로그아웃 후 새 로그인
-                        await userProvider.signInWithGoogle();
-                        Snackbar(
-                          text: '구글 로그인 성공',
-                          icon: Icons.check_circle,
-                          backgroundColor: Colors.green,
-                        ).showSnackbar(context);
-                        Navigator.pop(context);
+                        final result = await userProvider.signInWithGoogle();
+
+                        if (result) {
+                          Snackbar(
+                            text: '구글 로그인 성공',
+                            icon: Icons.check_circle,
+                            backgroundColor: Colors.green,
+                          ).showSnackbar(context);
+                          Navigator.pop(context);
+                        } else {
+                          Snackbar(
+                            text: '구글 로그인 실패: 사용자 정보 없음',
+                            icon: Icons.error,
+                            backgroundColor: Colors.red,
+                          ).showSnackbar(context);
+                        }
                       } catch (e) {
                         Snackbar(
-                          text: '구글 로그인 실패',
+                          text: '구글 로그인 실패: $e',
                           icon: Icons.error,
                           backgroundColor: Colors.red,
                         ).showSnackbar(context);
@@ -233,33 +244,65 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: InkWell(
                     onTap: () async {
                       try {
+                        print("네이버 로그인 프로세스 시작");
+
                         const clientId = 'uR8aMYGT5QeEesKQ8Eoe';
                         const clientSecret = 'IBsH1sjga2';
                         const clientName = "login_app";
 
+                        // 네이버 로그인 SDK 초기화
                         await NaverLoginSDK.initialize(
                           clientId: clientId,
                           clientSecret: clientSecret,
                           clientName: clientName,
                         );
+                        print("NaverLoginSDK 초기화 완료");
 
+                        // 로그인 시도
                         await NaverLoginSDK.authenticate(
                           callback: OAuthLoginCallback(
                             onSuccess: () async {
+                              // 프로필 정보 요청
                               await NaverLoginSDK.profile(
                                 callback: ProfileCallback(
                                   onSuccess:
                                       (resultCode, message, response) async {
                                     final profile = NaverLoginProfile.fromJson(
                                         response: response);
-                                    final id = profile.id;
+                                    print('프로필: $profile');
+
+                                    final id = profile.email
+                                        ?.replaceAll('@naver.com', '');
                                     final email = profile.email;
                                     final name = profile.name;
+                                    if (profile.mobile == null) {
+                                      // phone 값이 없으면 동의항목 재요청
+                                      final authUrl = Uri.parse(
+                                          "https://nid.naver.com/oauth2.0/authorize"
+                                          "?response_type=code"
+                                          "&client_id=$clientId"
+                                          "&state=RANDOM_STRING"
+                                          "&auth_type=reprompt");
+
+                                      if (await canLaunchUrl(authUrl)) {
+                                        await launchUrl(authUrl,
+                                            mode:
+                                                LaunchMode.externalApplication);
+                                        print("동의항목 재요청: 네이버 로그인 페이지 열림");
+                                      } else {
+                                        print("네이버 로그인 페이지를 열 수 없습니다.");
+                                      }
+                                      return;
+                                    }
+                                    final phone = profile.mobile;
+
 
                                     print("네이버 로그인 성공");
 
+                                    // 사용자 정보 제공
                                     await userProvider.signInWithNaver(
-                                        id!, email!, name!);
+                                        id!, email!, name!, phone!);
+
                                     Snackbar(
                                       text: '네이버 로그인 성공',
                                       icon: Icons.check_circle,
@@ -269,15 +312,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Navigator.pop(context);
                                   },
                                   onFailure: (httpStatus, message) {
-                                    print("네이버 로그인 실패");
+                                    print("네이버 로그인 실패: $message");
                                     Snackbar(
-                                      text: '네이버 로그인 실패',
+                                      text: '네이버 로그인 실패: $message',
                                       icon: Icons.error,
                                       backgroundColor: Colors.red,
                                     ).showSnackbar(context);
                                   },
                                   onError: (errorCode, message) {
-                                    print("네이버 로그인 에러");
+                                    print("네이버 로그인 에러: $message");
 
                                     if (message == 'naverapp_not_installed') {
                                       showDialog(
@@ -299,7 +342,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       );
                                     } else {
                                       Snackbar(
-                                        text: '네이버 로그인 에러',
+                                        text: '네이버 로그인 에러: $message',
                                         icon: Icons.error,
                                         backgroundColor: Colors.red,
                                       ).showSnackbar(context);
@@ -309,46 +352,19 @@ class _LoginScreenState extends State<LoginScreen> {
                               );
                             },
                             onFailure: (httpStatus, message) {
-                              print("네이버 로그인 실패");
+                              print("네이버 로그인 실패: $message");
                               Snackbar(
-                                text: '네이버 로그인 실패',
+                                text: '네이버 로그인 실패: $message',
                                 icon: Icons.error,
                                 backgroundColor: Colors.red,
                               ).showSnackbar(context);
                             },
-                            onError: (errorCode, message) {
-                              print("네이버 로그인 에러");
-
-                              if (message == 'naverapp_not_installed') {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: Text('알림'),
-                                    content: Text('네이버 앱이 설치되어 있지 않습니다.'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text('확인',
-                                            style: TextStyle(
-                                                color: Colors.blueAccent)),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                Snackbar(
-                                  text: '네이버 로그인 에러',
-                                  icon: Icons.error,
-                                  backgroundColor: Colors.red,
-                                ).showSnackbar(context);
-                              }
-                            },
                           ),
                         );
                       } catch (e) {
-                        print("네이버 로그인 예외 발생");
+                        print("네이버 로그인 예외 발생: $e");
                         Snackbar(
-                          text: '네이버 로그인 예외 발생',
+                          text: '네이버 로그인 예외 발생: $e',
                           icon: Icons.error,
                           backgroundColor: Colors.red,
                         ).showSnackbar(context);

@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Users saveOrLoginGoogleUser(String email, String name) throws Exception {
+    public Users saveOrLoginGoogleUser(String email, String name, String phone) throws Exception {
         System.out.println("이메일 : " + email);
         // 구글 이메일로 사용자 조회
         Users existingUser = userMapper.selectByEmail(email);
@@ -83,6 +83,7 @@ public class UserServiceImpl implements UserService {
                     .username(email) // 이메일을 아이디로 사용
                     .email(email)
                     .name(name)
+                    .phone(phone)
                     .provider("google")
                     .build();
 
@@ -101,7 +102,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Users saveOrLoginNaverUser(String email, String name) throws Exception {
+    public Users saveOrLoginNaverUser(String id, String email, String name, String phone) throws Exception {
         System.out.println("이메일 : " + email);
 
         // 네이버 이메일로 사용자 조회
@@ -110,9 +111,10 @@ public class UserServiceImpl implements UserService {
         // 사용자가 없으면 새로운 사용자로 등록
         if (existingUser == null) {
             Users newUser = Users.builder()
-                    .username(email) // 이메일을 아이디로 사용
+                    .username(id)
                     .email(email)
                     .name(name)
+                    .phone(phone)
                     .provider("naver")
                     .build();
 

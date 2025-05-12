@@ -19,6 +19,7 @@ public class Users {
     private String username;
     private String password;
     private String name;
+    private String phone;
     private String email;
     private String provider;
     private Date createdAt;

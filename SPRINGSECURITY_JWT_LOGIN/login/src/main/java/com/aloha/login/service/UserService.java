@@ -21,9 +21,9 @@ public interface UserService {
     // 회원 삭제
     public boolean delete(String username) throws Exception;
 
-    public Users saveOrLoginGoogleUser(String email, String name) throws Exception;
+    public Users saveOrLoginGoogleUser(String email, String name, String phone) throws Exception;
     
-    public Users saveOrLoginNaverUser(String email, String name) throws Exception;
+    public Users saveOrLoginNaverUser(String id, String email, String name, String phone) throws Exception;
 
     public Users saveOrLoginKakaoUser(String id, String name) throws Exception;
     

@@ -7,6 +7,7 @@ class User {
   String? password;
   String? name;
   String? email;
+  String? phone;
   DateTime? createdAt;
   DateTime? updatedAt;
   bool? enabled;
@@ -19,6 +20,7 @@ class User {
       this.username,
       this.password,
       this.name,
+      this.phone,
       this.email,
       this.createdAt,
       this.updatedAt,
@@ -35,6 +37,7 @@ class User {
       'username': username,
       'password': password,
       'name': name,
+      'phone': phone,
       'email': email,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
@@ -51,6 +54,7 @@ class User {
       username: map['username'],
       password: map['password'],
       name: map['name'],
+      phone: map['phone'],
       email: map['email'],
       createdAt: map['createdAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['createdAt']) : null,
       updatedAt: map['updatedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt']) : null,

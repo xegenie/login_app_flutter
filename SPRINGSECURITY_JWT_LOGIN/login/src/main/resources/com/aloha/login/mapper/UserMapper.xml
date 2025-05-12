@@ -13,6 +13,7 @@
         <result property="username" column="username" />
         <result property="password" column="password" />
         <result property="name" column="name" />
+        <result property="phone" column="phone" />
         <result property="email" column="email" />
         <result property="enabled" column="enabled" />
         <result property="createdAt" column="created_at" />
@@ -53,8 +54,8 @@
 
     <!-- 회원 가입 -->
     <insert id="join">
-        INSERT INTO users ( id, username, password, name, email, provider )
-        VALUES ( #{id}, #{username}, #{password}, #{name}, #{email}, #{provider} )
+        INSERT INTO users ( id, username, password, name, phone, email, provider )
+        VALUES ( #{id}, #{username}, #{password}, #{name}, #{phone}, #{email}, #{provider} )
     </insert>
 
     <!-- 회원 정보 수정 -->
@@ -63,6 +64,7 @@
             <set>
                 <if test="password != null">password = #{password},</if>
                 <if test="name != null">name = #{name},</if>
+                <if test="phone != null">phone = #{phone},</if>
                 <if test="email != null">email = #{email},</if>
                 updated_at = now()
             </set>
