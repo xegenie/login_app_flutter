@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:login_app/models/user.dart' as app_user;
 import 'package:naver_login_sdk/naver_login_sdk.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProvider extends ChangeNotifier {
   // 상태관리 정보
@@ -33,11 +34,12 @@ class UserProvider extends ChangeNotifier {
   final storage = const FlutterSecureStorage();
 
   // 로그인 요청
-  Future<void> login(String username, String password) async {
+  Future<void> login(String username, String password,
+      {bool rememberId = false, bool rememberMe = false}) async {
     // 초기화
     _loginStat = false;
 
-    const url = 'http://10.0.2.2:8080/login';
+    const url = 'http://54.180.59.31/login';
     final data = {
       'username': username,
       'password': password,
@@ -62,6 +64,24 @@ class UserProvider extends ChangeNotifier {
         // 사용자 정보, 로그인 상태 ➡️ Provider 에 갱신
         _userInfo = app_user.User.fromMap(response.data);
         _loginStat = true;
+
+        // 아이디 저장
+        if (rememberId) {
+          print('아이디 저장');
+          await storage.write(key: 'username', value: username);
+        } else {
+          print('아이디 저장 해제');
+          await storage.delete(key: 'username');
+        }
+        // 자동 로그인
+        if (rememberMe) {
+          print('자동 로그인');
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('auto_login', true);
+        } else {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('auto_login', false);
+        }
       } else if (response.statusCode == 403) {
         print("아이디 또는 비밀번호가 일치하지 않습니다.");
       } else {
@@ -98,7 +118,7 @@ class UserProvider extends ChangeNotifier {
       final email = userCredential.user?.email;
       final name = userCredential.user?.displayName;
 
-      const url = 'http://10.0.2.2:8080/google-login';
+      const url = 'http://54.180.59.31/google-login';
       final data = {
         'email': email,
         'name': name,
@@ -130,6 +150,12 @@ class UserProvider extends ChangeNotifier {
         final Map<String, dynamic> userMap = jsonDecode(response.data['user']);
         _userInfo = app_user.User.fromMap(userMap); // 사용자 정보 갱신
         _loginStat = true;
+
+        // SharedPreferences에 JWT 저장
+        print('자동 로그인');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('auto_login', true);
+
       } else if (response.statusCode == 403) {
         print("아이디 또는 비밀번호가 일치하지 않습니다.");
       } else {
@@ -148,7 +174,7 @@ class UserProvider extends ChangeNotifier {
     // 초기화
     _loginStat = false;
 
-    const url = 'http://10.0.2.2:8080/naver-login';
+    const url = 'http://54.180.59.31/naver-login';
     final data = {
       'id': id,
       'email': email,
@@ -180,6 +206,12 @@ class UserProvider extends ChangeNotifier {
         final Map<String, dynamic> userMap = jsonDecode(response.data['user']);
         _userInfo = app_user.User.fromMap(userMap);
         _loginStat = true;
+
+         // SharedPreferences에 JWT 저장
+        print('자동 로그인');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('auto_login', true);
+
       } else if (response.statusCode == 403) {
         print("네이버 로그인 인증 실패");
       } else {
@@ -217,7 +249,7 @@ class UserProvider extends ChangeNotifier {
     // Firebase 로그인
     await signInWithFirebase(idToken, accessToken); // Firebase 로그인만 처리
 
-    const url = 'http://10.0.2.2:8080/kakao-login';
+    const url = 'http://54.180.59.31/kakao-login';
     final data = {
       'id': id,
       'name': name,
@@ -248,6 +280,12 @@ class UserProvider extends ChangeNotifier {
         final Map<String, dynamic> userMap = jsonDecode(response.data['user']);
         _userInfo = app_user.User.fromMap(userMap);
         _loginStat = true;
+
+         // SharedPreferences에 JWT 저장
+        print('자동 로그인');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('auto_login', true);
+        
       } else if (response.statusCode == 403) {
         print("카카오 로그인 인증 실패");
       } else {
@@ -259,6 +297,57 @@ class UserProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  // 사용자 정보 요청
+  Future<bool> getUserInfo() async {
+    final url = 'http://54.180.59.31/users/info';
+    try {
+      String? jwt = await storage.read(key: 'jwt');
+      print('jwt : $jwt');
+
+      final response = await _dio.get(url,
+          options: Options(headers: {
+            'Authorization': 'Bearer $jwt',
+            'Content-Type': 'application/json'
+          }));
+      if (response.statusCode == 200) {
+        final userInfo = response.data;
+        print('userInfo : $userInfo');
+        if (userInfo == null) {
+          return false;
+        }
+        // provider에 사용자 정보 저장
+        _userInfo = app_user.User.fromMap(userInfo);
+        notifyListeners();
+        return true;
+      } else {
+        print('사용자 정보 조회 실패');
+        return false;
+      }
+    } catch (e) {
+      print('사용자 정보 요청 실패 : $e');
+      return false;
+    }
+  }
+
+  // 자동 로그인
+  Future<void> autoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rememberMe = prefs.getBool('auto_login') ?? false;
+
+    if (rememberMe) {
+      final jwt = await storage.read(key: 'jwt');
+      if (jwt != null) {
+        // 사용자 정보 요청
+        bool result = await getUserInfo();
+        // 응답 성공 시, 로그인 여부 true
+        if (result) {
+          _loginStat = true;
+          notifyListeners();
+        }
+      }
+    }
   }
 
   // 로그아웃

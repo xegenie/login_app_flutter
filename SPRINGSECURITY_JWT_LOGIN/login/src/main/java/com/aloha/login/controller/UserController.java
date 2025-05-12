@@ -46,6 +46,7 @@ public class UserController {
         log.info("customUser : " + customUser);
 
         if( customUser == null ) {
+            log.error("AuthenticationPrincipal에서 CustomUser를 가져올 수 없습니다.");
             return new ResponseEntity<>("UNAUTHORIZED", HttpStatus.UNAUTHORIZED);
         }
 

@@ -420,10 +420,10 @@ packages:
     dependency: "direct main"
     description:
       name: naver_login_sdk
-      sha256: ce7662debacf2fb38fc3c50e9f2219f6588465dc06b18e0df83cf1b9c228aec9
+      sha256: d428cfbfe18de8046499c28194c972cc7159d209f485d111ec195d8fe4f8a85b
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.0"
+    version: "3.0.0"
   nested:
     dependency: transitive
     description:

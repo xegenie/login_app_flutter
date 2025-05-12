@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:login_app/notifications/snackbar.dart';
@@ -24,6 +25,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
+
+  // 안전한 저장소
+  final storage = FlutterSecureStorage();
+  String? _username;
+
+  // 저장된 아이디 가져오기
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  void _loadUsername() async {
+    _username = await storage.read(key: 'username');
+    if (_username != null) {
+      _usernameController.text = _username!;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +169,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     final password = _passwordController.text;
 
                     // 로그인 요청
-                    await userProvider.login(username, password);
+                    await userProvider.login(username, password, 
+                      rememberId: _rememberId, rememberMe: _rememberMe);
 
                     if (userProvider.isLogin) {
                       print('로그인 성공');
@@ -174,6 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 10),
+                // 구글 로그인
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -206,6 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
+                // 네이버 로그인
                 Material(
                   color: Colors.transparent,
                   child: InkWell(

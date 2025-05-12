@@ -20,7 +20,7 @@ dependencies:
   http: ^0.13.6
   # 소셜 로그인
   google_sign_in: ^5.4.1
-  naver_login_sdk: ^2.3.0
+  naver_login_sdk: ^3.0.0
   kakao_flutter_sdk_user: ^1.9.5
 
   # Firebase 의존성

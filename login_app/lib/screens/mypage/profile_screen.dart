@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:login_app/models/user.dart';
 import 'package:login_app/notifications/snackbar.dart';
 import 'package:login_app/provider/user_provider.dart';
 import 'package:login_app/screens/home_screen.dart';
+import 'package:login_app/services/user_service.dart';
 import 'package:login_app/widgets/common_bottom_navigation_bar.dart';
 import 'package:login_app/widgets/custom_button.dart';
 import 'package:login_app/widgets/custom_drawer.dart';
@@ -17,13 +19,12 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  String? _username;
-  String? _name;
-  String? _email;
-
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _nameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
+
+  User? _user;
+  UserService userService = UserService();
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +50,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const HomeScreen();
     }
 
+    // 로그인 상태
+    String _username = userProvider.userInfo.username ?? 'empty';
+
+    // 사용자 정보 조회 요청
+    if (_user == null) {
+      userService.getUser(_username).then((value) {
+        print(value);
+        setState(() {
+          _user = User.fromMap(value);
+        });
+        // 텍스트 폼 필드에 출력
+        _usernameController.text = _user?.username ?? _username;
+        _nameController.text = _user?.name ?? '';
+        _emailController.text = _user?.email ?? '';
+      });
+    }
+
     return Scaffold(
         appBar: AppBar(
           title: Text("마이"),
@@ -71,15 +89,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextFormField(
                     controller: _usernameController,
                     validator: (value) {},
+                    readOnly: true,
                     decoration: InputDecoration(
-                      labelText: userProvider.userInfo.username,
+                      labelText: '아이디',
                       hintText: '아이디를 입력해 주세요.',
                       prefixIcon: const Icon(Icons.person_outline),
                       border: const OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       setState(() {
-                        _username = value;
+                        _user?.username = value;
                       });
                     },
                   ),
@@ -91,14 +110,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     controller: _nameController,
                     validator: (value) {},
                     decoration: InputDecoration(
-                      labelText: userProvider.userInfo.name,
-                      hintText: '이름을을 입력해 주세요.',
+                      labelText: '이름',
+                      hintText: '이름을 입력해 주세요.',
                       prefixIcon: const Icon(Icons.person_outline),
                       border: const OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       setState(() {
-                        _name = value;
+                        _user?.name = value;
                       });
                     },
                   ),
@@ -110,14 +129,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     controller: _emailController,
                     validator: (value) {},
                     decoration: InputDecoration(
-                      labelText: userProvider.userInfo.email,
+                      labelText: '이메일',
                       hintText: '이메일을 입력해 주세요.',
                       prefixIcon: Icon(Icons.email_outlined),
                       border: OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       setState(() {
-                        _email = value;
+                        _user?.email = value;
                       });
                     },
                   ),
@@ -128,12 +147,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       text: '회원 탈퇴',
                       backgroundColor: Colors.redAccent,
                       isFullWidth: true,
-                      onPressed: () {})
+                      onPressed: () {
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('회원 탈퇴'),
+                                content: Text('정말로 탈퇴하시겠습니까?'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: Text('취소'),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: Text('확인'),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      // 회원 탈퇴 요청
+                                      userService
+                                          .deleteUser(_username)
+                                          .then((value) {
+                                        if (value) {
+                                          userProvider.logout();
+                                          Navigator.pushReplacementNamed(
+                                              context, '/');
+                                          Snackbar(
+                                                  text: '회원탈퇴 성공',
+                                                  icon: Icons.check_circle,
+                                                  backgroundColor: Colors.red)
+                                              .showSnackbar(context);
+                                        }
+                                      });
+                                    },
+                                  )
+                                ],
+                              );
+                            });
+                      })
                 ],
               )),
         ),
-        bottomSheet:
-            CustomButton(text: '회원정보 수정', isFullWidth: true, onPressed: () {}),
+        bottomSheet: CustomButton(
+            text: '회원정보 수정',
+            isFullWidth: true,
+            onPressed: () async {
+              if (_formKey.currentState!.validate()) {
+                // 회원정보 수정 요청
+                bool result = await userService.updateUser({
+                  'username': _username,
+                  'name': _user!.name,
+                  'email': _user!.email
+                });
+                if (result) {
+                  Snackbar(
+                          text: '회원정보 수정 성공',
+                          icon: Icons.check_circle,
+                          backgroundColor: Colors.green)
+                      .showSnackbar(context);
+
+                  // provider에 수정된 사용자 정보 업데이트
+                  userProvider.userInfo = User(
+                      username: _username,
+                      name: _user!.name,
+                      email: _user!.email);
+                }
+              }
+            }),
         endDrawer: CustomDrawer(),
         bottomNavigationBar: CommonBottomNavigationBar(currentIndex: 4));
   }

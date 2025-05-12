@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -108,6 +109,7 @@ public class LoginController {
                 .add("typ", SecurityConstants.TOKEN_TYPE) // typ : "jwt"
                 .and() // 페이로드 설정
                 .claim("uid", username) // 사용자 아이디
+                .claim("username", username) // 사용자 아이디
                 .claim("rol", roles) // 권한 정보
                 .expiration(new Date(System.currentTimeMillis() + day5)) // 만료시간
                 .compact(); // 토큰 생성
@@ -216,7 +218,7 @@ public class LoginController {
         }
     }
 
-    // 네이버 로그인
+    // 카카오 로그인
     @PostMapping("/kakao-login")
     public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> loginData) {
         try {
@@ -224,7 +226,7 @@ public class LoginController {
             String name = loginData.get("name");
 
             // 네이버로부터 받은 사용자 정보로 JWT 토큰 생성
-            String jwt = createJwtToken(id);
+            String jwt = createJwtToken(name);
 
             // 사용자 정보 저장 또는 로그인 처리
             Users user = userService.saveOrLoginKakaoUser(id, name);

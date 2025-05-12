@@ -98,7 +98,7 @@ public class JwtProvider {
             log.info("parsedToken : " + parsedToken);
 
             // 사용자 식별키(id)
-            String id = parsedToken.getPayload().get("id").toString();
+            String id = parsedToken.getPayload().get("uid").toString();
             // 사용자 아이디
             String username = parsedToken.getPayload().get("username").toString();
             // 회원 권한

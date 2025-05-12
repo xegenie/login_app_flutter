@@ -49,6 +49,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    // 앱 실행 시, 자동로그인
+    Provider.of<UserProvider>(context, listen: false).autoLogin();
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
