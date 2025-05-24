@@ -45,5 +45,56 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	 <!-- ✅ Naver 로그인 관련 설정 -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>login_app</string> <!-- ✅ 여기에 실제 URL 스킴 입력 -->
+            </array>
+        </dict>
+    </array>
+
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>naversearchapp</string>
+        <string>naversearchthirdlogin</string>
+    </array>
+
+    <key>naverServiceAppUrlScheme</key>
+    <string>login_app</string> <!-- ✅ 실제 URL 스킴으로 대체 -->
+    <key>naverConsumerKey</key>
+    <string>uR8aMYGT5QeEesKQ8Eoe</string> <!-- ✅ 네이버에서 받은 클라이언트 ID -->
+    <key>naverConsumerSecret</key>
+    <string>IBsH1sjga2</string> <!-- ✅ 네이버에서 받은 시크릿 키 -->
+    <key>naverServiceAppName</key>
+    <string>login_app</string> <!-- ✅ 앱 이름 -->
+
+    <!-- ✅ ATS 설정 -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>naver.com</key>
+            <dict>
+                <key>NSExceptionRequiresForwardSecrecy</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+            <key>naver.net</key>
+            <dict>
+                <key>NSExceptionRequiresForwardSecrecy</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
 </dict>
 </plist>

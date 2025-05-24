@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -8,8 +7,6 @@ import 'package:login_app/provider/user_provider.dart';
 import 'package:login_app/widgets/custom_button.dart';
 import 'package:naver_login_sdk/naver_login_sdk.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -275,33 +272,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ?.replaceAll('@naver.com', '');
                                     final email = profile.email;
                                     final name = profile.name;
-                                    if (profile.mobile == null) {
-                                      // phone 값이 없으면 동의항목 재요청
-                                      final authUrl = Uri.parse(
-                                          "https://nid.naver.com/oauth2.0/authorize"
-                                          "?response_type=code"
-                                          "&client_id=$clientId"
-                                          "&state=RANDOM_STRING"
-                                          "&auth_type=reprompt");
-
-                                      if (await canLaunchUrl(authUrl)) {
-                                        await launchUrl(authUrl,
-                                            mode:
-                                                LaunchMode.externalApplication);
-                                        print("동의항목 재요청: 네이버 로그인 페이지 열림");
-                                      } else {
-                                        print("네이버 로그인 페이지를 열 수 없습니다.");
-                                      }
-                                      return;
-                                    }
                                     final phone = profile.mobile;
-
+                                    final phoneNum = phone?.replaceAll('-', '');
 
                                     print("네이버 로그인 성공");
 
                                     // 사용자 정보 제공
                                     await userProvider.signInWithNaver(
-                                        id!, email!, name!, phone!);
+                                        id!, email!, name!, phoneNum!);
 
                                     Snackbar(
                                       text: '네이버 로그인 성공',

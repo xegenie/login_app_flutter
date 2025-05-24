@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 class UserService {
   final Dio _dio = Dio();
@@ -88,5 +89,23 @@ class UserService {
       print('회원 탈퇴 실패 : $e');
     }
     return false;
+  }
+
+  Future<void> deleteNaverAccessToken(String accessToken) async {
+    const clientId = 'uR8aMYGT5QeEesKQ8Eoe'; // 네이버 앱 등록 시 받은 것
+    const clientSecret = 'IBsH1sjga2'; // 네이버 앱 등록 시 받은 것
+
+    final uri =
+        Uri.parse('https://nid.naver.com/oauth2.0/token?grant_type=delete&'
+            'client_id=$clientId&client_secret=$clientSecret&'
+            'access_token=$accessToken&service_provider=NAVER');
+
+    final response = await http.post(uri);
+
+    if (response.statusCode == 200) {
+      print('✅ 네이버 access token 삭제 성공');
+    } else {
+      print('❌ 삭제 실패: ${response.statusCode} / ${response.body}');
+    }
   }
 }

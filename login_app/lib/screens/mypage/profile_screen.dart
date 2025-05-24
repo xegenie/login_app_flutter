@@ -7,6 +7,7 @@ import 'package:login_app/services/user_service.dart';
 import 'package:login_app/widgets/common_bottom_navigation_bar.dart';
 import 'package:login_app/widgets/custom_button.dart';
 import 'package:login_app/widgets/custom_drawer.dart';
+import 'package:naver_login_sdk/naver_login_sdk.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -131,10 +132,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     controller: _phoneController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                      return '연락처를 입력해 주세요.';
+                        return '연락처를 입력해 주세요.';
                       }
                       if (!RegExp(r'^\d+$').hasMatch(value)) {
-                      return '숫자만 입력 가능합니다.';
+                        return '숫자만 입력 가능합니다.';
                       }
                       return null;
                     },
@@ -192,10 +193,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   TextButton(
                                     child: Text('확인'),
-                                    onPressed: () {
+                                    onPressed: () async {
+                                      final accessToken =
+                                          await NaverLoginSDK.getAccessToken();
+
                                       Navigator.pop(context);
+
                                       // 회원 탈퇴 요청
-                                      userService
+                                      await userService.deleteNaverAccessToken(accessToken);
+                                      await userService
                                           .deleteUser(_username)
                                           .then((value) {
                                         if (value) {
